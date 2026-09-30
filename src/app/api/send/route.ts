@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 
+// A simulação de digitação segura a requisição por alguns segundos
+export const maxDuration = 30;
+
+const MAX_TYPING_DELAY_MS = 15000;
+
 interface SendPayload {
   phone: string;
   message: string;
+  typingDelayMs?: number;
   config?: {
     provider?: 'evolution' | 'zapi' | 'meta' | 'custom';
     apiUrl?: string;
@@ -26,6 +32,7 @@ export async function POST(request: Request) {
   try {
     const body: SendPayload = await request.json();
     const { phone, message, config } = body;
+    const typingDelayMs = Math.min(Math.max(Math.round(Number(body.typingDelayMs) || 0), 0), MAX_TYPING_DELAY_MS);
 
     if (!phone || !message) {
       return NextResponse.json(
@@ -71,6 +78,8 @@ export async function POST(request: Request) {
       requestBody = {
         number: fullPhone,
         text: message,
+        // Evolution v2: mantém a presença "digitando..." pelo tempo informado antes de enviar
+        ...(typingDelayMs > 0 && { delay: typingDelayMs }),
       };
     }
     // 2. Provedor: Z-API
