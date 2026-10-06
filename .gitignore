@@ -32,3 +32,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python
+.venv/
+__pycache__/
+
+# planilhas de leads (dados pessoais, não subir pro GitHub)
+/*.csv
+/*.xlsx
+/*.xls
+/*.cache.json
