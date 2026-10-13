@@ -1,0 +1,29 @@
+services:
+  leadzap:
+    build: .
+    image: leadzap:latest
+    container_name: leadzap
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      # Limita o heap do Node abaixo do limite de memória do container
+      NODE_OPTIONS: --max-old-space-size=256
+    # Sem "ports": acessível só pela rede interna (Nginx Proxy Manager -> leadzap:3000)
+    expose:
+      - "3000"
+    networks:
+      - malp-network
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  malp-network:
+    external: true

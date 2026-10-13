@@ -1,0 +1,38 @@
+# Dependências e builds locais
+node_modules
+.next
+out
+build
+*.tsbuildinfo
+next-env.d.ts
+
+# Git / editor / SO
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Segredos: o .env é lido pelo compose em runtime, nunca entra na imagem
+.env
+.env.*
+!.env.example
+
+# Docker
+Dockerfile
+.dockerignore
+compose.yaml
+docker-compose*.yml
+
+# Python / planilhas de leads (não fazem parte do app)
+.venv
+__pycache__
+scripts
+*.xlsx
+*.xls
+*.csv
+*.cache.json
+
+# Docs
+README.md
+*.md
