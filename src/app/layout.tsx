@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { CursorDot } from '../components/CursorDot';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,7 +27,6 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-        <CursorDot />
       </body>
     </html>
   );

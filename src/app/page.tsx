@@ -399,40 +399,10 @@ export default function Home() {
 
       {/* Hero */}
       <section className="hero on-dark">
-        <div className="container hero-grid">
-          <div className="hero-main">
-            <p className="eyebrow">Disparo de WhatsApp para leads</p>
-            <h1 className="headline h2">
-              Do telefone ao WhatsApp do lead em <span className="highlight">segundos</span>.
-            </h1>
-            <p className="hero-body">
-              Digite o número e aperte Enter. O LeadZap envia pela sua instância, com intervalo aleatório,
-              digitação simulada e uma variação diferente da mensagem para cada lead.
-            </p>
-          </div>
-
-          <dl className="hero-specs">
-            <div className="spec-row">
-              <dt>Intervalo entre envios</dt>
-              <dd>
-                {antiBan.minInterval}–{antiBan.maxInterval}s
-              </dd>
-            </div>
-            <div className="spec-row">
-              <dt>Digitando…</dt>
-              <dd>
-                {antiBan.minTyping}–{antiBan.maxTyping}s
-              </dd>
-            </div>
-            <div className="spec-row">
-              <dt>Na fila</dt>
-              <dd>{queue.length}</dd>
-            </div>
-            <div className="spec-row">
-              <dt>Provedor</dt>
-              <dd>{isConfigured ? apiConfig.provider : '—'}</dd>
-            </div>
-          </dl>
+        <div className="container">
+          <h1 className="headline h2">
+            Disparo para <span className="highlight">leads</span>.
+          </h1>
         </div>
       </section>
 
@@ -446,7 +416,6 @@ export default function Home() {
                 <label className="form-label" htmlFor="phone-input">
                   Telefone do lead
                 </label>
-                <span className="label-hint">Com DDD (ex: 11 99325-9396)</span>
               </div>
 
               <div className="phone-field">
@@ -478,7 +447,7 @@ export default function Home() {
                     type="button"
                     className="link"
                     onClick={() => setPreview(spin(message))}
-                    title="Gerar um exemplo de como o lead vai receber"
+                    title="Use {Olá|Oi} para variar o texto e {saudacao} para Bom dia/Boa tarde/Boa noite"
                   >
                     <Shuffle size={14} strokeWidth={2.5} />
                     Ver variação
@@ -504,13 +473,6 @@ export default function Home() {
                 placeholder="Digite aqui o texto que o lead receberá..."
                 aria-invalid={status?.type === 'error' && status.text.includes('mensagem para o lead') ? true : undefined}
               />
-
-              <div className="textarea-actions">
-                <span>
-                  <code>{'{Olá|Oi}'}</code> varia o texto · <code>{'{saudacao}'}</code> vira Bom dia/Boa tarde/Boa noite
-                </span>
-                <span className="mono">Ctrl + Enter envia</span>
-              </div>
 
               {preview !== null && (
                 <div className="preview-box">
@@ -543,25 +505,22 @@ export default function Home() {
             {/* Botão de disparo */}
             <InteractiveHoverButton variant="ink" size="lg" onClick={() => handleSend()} disabled={!phone.trim()}>
               {isQueueBusy ? 'Adicionar à fila' : 'Disparar mensagem'}
-              <span className="kbd">Enter ↵</span>
             </InteractiveHoverButton>
           </section>
 
           <div className="workspace-side">
             {/* Fila de Envio */}
-            <section className="list-section" aria-label="Fila de envio">
-              <div className="list-header">
-                <span className="eyebrow">
-                  <ListOrdered size={14} strokeWidth={2.5} />
-                  Fila ({queue.length})
-                </span>
-                {nextSendAt && <span className="countdown">próximo em {secondsToNext}s</span>}
-              </div>
+            {queue.length > 0 && (
+              <section className="list-section" aria-label="Fila de envio">
+                <div className="list-header">
+                  <span className="eyebrow">
+                    <ListOrdered size={14} strokeWidth={2.5} />
+                    Fila ({queue.length})
+                  </span>
+                  {nextSendAt && <span className="countdown">próximo em {secondsToNext}s</span>}
+                </div>
 
-              {queue.length === 0 ? (
-                <p className="list-empty">Nenhum envio pendente.</p>
-              ) : (
-                queue.map((item) => (
+                {queue.map((item) => (
                   <div key={item.id} className="list-row">
                     <div className="list-phone">
                       {item.status === 'sending' ? <span className="spinner" aria-hidden="true" /> : <Clock size={14} strokeWidth={2.5} />}
@@ -581,34 +540,30 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                ))
-              )}
-              {queue.some((i) => i.status === 'waiting') && (
-                <button type="button" className="link" style={{ marginTop: 12, alignSelf: 'flex-start' }} onClick={handleClearQueue}>
-                  Cancelar fila
-                </button>
-              )}
-            </section>
+                  ))}
+                {queue.some((i) => i.status === 'waiting') && (
+                  <button type="button" className="link" style={{ marginTop: 12, alignSelf: 'flex-start' }} onClick={handleClearQueue}>
+                    Cancelar fila
+                  </button>
+                )}
+              </section>
+            )}
 
             {/* Histórico */}
-            <section className="list-section" aria-label="Últimos envios">
-              <div className="list-header">
-                <span className="eyebrow">
-                  <Clock size={14} strokeWidth={2.5} />
-                  Últimos envios
-                </span>
-                {history.length > 0 && (
+            {history.length > 0 && (
+              <section className="list-section" aria-label="Últimos envios">
+                <div className="list-header">
+                  <span className="eyebrow">
+                    <Clock size={14} strokeWidth={2.5} />
+                    Últimos envios
+                  </span>
                   <button type="button" className="link" onClick={handleClearHistory} title="Limpar histórico">
                     <Trash2 size={14} strokeWidth={2.5} />
                     Limpar
                   </button>
-                )}
-              </div>
+                </div>
 
-              {history.length === 0 ? (
-                <p className="list-empty">Os envios feitos aparecem aqui.</p>
-              ) : (
-                history.map((item) => (
+                {history.map((item) => (
                   <div key={item.id} className="list-row">
                     <div className="list-phone">
                       <Phone size={14} strokeWidth={2.5} />
@@ -621,19 +576,12 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
-                ))
-              )}
-            </section>
+                  ))}
+              </section>
+            )}
           </div>
         </div>
       </main>
-
-      <footer className="site-footer">
-        <div className="container">
-          <span>malp tech · LeadZap</span>
-          <span>Envio via API · intervalo aleatório · spintax</span>
-        </div>
-      </footer>
 
       {/* Modal de Configuração da API */}
       {isModalOpen && (
@@ -649,8 +597,6 @@ export default function Home() {
             </div>
 
             <div className="modal-body">
-              <p className="modal-intro">Conecte a sua API do WhatsApp para enviar em segundo plano.</p>
-
               {/* Seletor de Provedor */}
               <div className="provider-selector" role="group" aria-label="Provedor">
                 {(
@@ -816,7 +762,6 @@ export default function Home() {
                       onChange={(e) => updateAntiBan('maxTyping', e.target.value)}
                     />
                   </div>
-                  <p className="field-note">A simulação de digitação funciona com a Evolution API.</p>
                 </div>
               </div>
             </div>
