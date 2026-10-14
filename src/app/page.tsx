@@ -1,22 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Send, 
-  Phone, 
-  RotateCcw, 
-  Clock, 
-  Trash2, 
-  CheckCircle2, 
-  AlertCircle, 
-  Settings, 
-  X, 
-  HelpCircle,
-  Zap,
+import {
+  Phone,
+  RotateCcw,
+  Clock,
+  Trash2,
+  CheckCircle2,
+  AlertCircle,
+  Settings,
+  X,
   Shuffle,
   ListOrdered,
-  ShieldCheck
+  ShieldCheck,
 } from 'lucide-react';
+import { Logo } from '../components/Logo';
+import { InteractiveHoverButton } from '../components/InteractiveHoverButton';
 import { spin, randomBetween } from '../lib/spintax';
 
 const DEFAULT_MESSAGE =
@@ -376,313 +375,335 @@ export default function Home() {
   };
 
   return (
-    <main className="main-container">
-      {/* Top Header */}
-      <header className="header-wrapper">
-        <div className="brand-info">
-          <div className="brand-icon">
-            <Zap size={24} />
+    <>
+      {/* Header */}
+      <header className="site-header">
+        <div className="container">
+          <div className="brand">
+            <Logo />
+            <span className="brand-product">LeadZap</span>
           </div>
-          <div>
-            <h1 className="brand-title">LeadZap</h1>
-            <p className="brand-subtitle">Disparo 100% automático em segundo plano</p>
-          </div>
-        </div>
 
-        <div className="header-actions">
-          <button
-            type="button"
-            className="btn-settings"
-            onClick={() => setIsModalOpen(true)}
-            title="Configurar API do WhatsApp"
-          >
-            <Settings size={14} />
-            <span>Configurar API</span>
-          </button>
-
-          <div className={`status-badge ${isConfigured ? 'online' : 'warning'}`}>
-            <span className={`pulse-dot ${isConfigured ? '' : 'warning'}`}></span>
-            <span>{isConfigured ? 'API Conectada' : 'Sem API'}</span>
+          <div className="header-actions">
+            <div className={`status ${isConfigured ? 'online' : ''}`} title={isConfigured ? 'API conectada' : 'Sem API'}>
+              <span className="status-square" aria-hidden="true" />
+              <span className="status-label">{isConfigured ? 'API conectada' : 'Sem API'}</span>
+            </div>
+            <InteractiveHoverButton variant="outlineLight" size="sm" onClick={() => setIsModalOpen(true)}>
+              <Settings size={14} strokeWidth={2.5} />
+              Configurar API
+            </InteractiveHoverButton>
           </div>
         </div>
       </header>
 
-      {/* Main Form Card */}
-      <section className="card">
-        {/* Campo 1: Telefone */}
-        <div className="form-group">
-          <div className="label-row">
-            <label className="form-label" htmlFor="phone-input">
-              Telefone do Lead
-            </label>
-            <span className="label-hint">Com DDD (ex: 11 99325-9396)</span>
+      {/* Hero */}
+      <section className="hero on-dark">
+        <div className="container hero-grid">
+          <div className="hero-main">
+            <p className="eyebrow">Disparo de WhatsApp para leads</p>
+            <h1 className="headline h2">
+              Do telefone ao WhatsApp do lead em <span className="highlight">segundos</span>.
+            </h1>
+            <p className="hero-body">
+              Digite o número e aperte Enter. O LeadZap envia pela sua instância, com intervalo aleatório,
+              digitação simulada e uma variação diferente da mensagem para cada lead.
+            </p>
           </div>
 
-          <div className="input-wrapper">
-            <div className="phone-prefix">
-              <span>🇧🇷</span>
-              <span>+55</span>
+          <dl className="hero-specs">
+            <div className="spec-row">
+              <dt>Intervalo entre envios</dt>
+              <dd>
+                {antiBan.minInterval}–{antiBan.maxInterval}s
+              </dd>
             </div>
-            <input
-              id="phone-input"
-              ref={phoneInputRef}
-              type="tel"
-              className="phone-input"
-              placeholder="(11) 99999-9999"
-              value={phone}
-              onChange={handlePhoneChange}
-              onKeyDown={handleKeyDown}
-              autoComplete="off"
-            />
-          </div>
+            <div className="spec-row">
+              <dt>Digitando…</dt>
+              <dd>
+                {antiBan.minTyping}–{antiBan.maxTyping}s
+              </dd>
+            </div>
+            <div className="spec-row">
+              <dt>Na fila</dt>
+              <dd>{queue.length}</dd>
+            </div>
+            <div className="spec-row">
+              <dt>Provedor</dt>
+              <dd>{isConfigured ? apiConfig.provider : '—'}</dd>
+            </div>
+          </dl>
         </div>
-
-        {/* Campo 2: Mensagem */}
-        <div className="form-group">
-          <div className="label-row">
-            <label className="form-label" htmlFor="message-input">
-              Mensagem com Variações
-            </label>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                type="button"
-                className="btn-text"
-                onClick={() => setPreview(spin(message))}
-                title="Gerar um exemplo de como o lead vai receber"
-              >
-                <Shuffle size={12} style={{ display: 'inline', marginRight: 4 }} />
-                Ver variação
-              </button>
-              <button
-                type="button"
-                className="btn-text"
-                onClick={handleResetMessage}
-                title="Restaurar mensagem padrão"
-              >
-                <RotateCcw size={12} style={{ display: 'inline', marginRight: 4 }} />
-                Restaurar padrão
-              </button>
-            </div>
-          </div>
-
-          <textarea
-            id="message-input"
-            className="textarea-input"
-            value={message}
-            onChange={handleMessageChange}
-            onKeyDown={handleTextAreaKeyDown}
-            placeholder="Digite aqui o texto que o lead receberá..."
-          />
-
-          <div className="textarea-actions">
-            <span>{'Use {Olá|Oi} para variar o texto e {saudacao} para Bom dia/Boa tarde/Boa noite'}</span>
-            <span>Ctrl + Enter para enviar</span>
-          </div>
-
-          {preview !== null && (
-            <div className="preview-box">
-              <div className="preview-header">
-                <span>Exemplo de variação</span>
-                <button type="button" className="btn-close" onClick={() => setPreview(null)} title="Fechar">
-                  <X size={14} />
-                </button>
-              </div>
-              <p>{preview}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Feedback Alert */}
-        {status && (
-          <div className={`feedback-box ${status.type === 'success' ? 'feedback-success' : 'feedback-error'}`}>
-            {status.type === 'success' ? (
-              <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-            ) : (
-              <AlertCircle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-            )}
-            <div>
-              <p>{status.text}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Botão de Disparo */}
-        <button
-          type="button"
-          className="btn-submit"
-          onClick={() => handleSend()}
-          disabled={!phone.trim()}
-        >
-          <Send size={20} />
-          <span>{isQueueBusy ? 'Adicionar à Fila' : 'Disparar Mensagem Agora'}</span>
-          <span className="shortcut-badge">Enter ↵</span>
-        </button>
       </section>
 
-      {/* Fila de Envio */}
-      {queue.length > 0 && (
-        <section className="history-section">
-          <div className="history-header">
-            <div className="history-title">
-              <ListOrdered size={14} />
-              <span>Fila de Envio ({queue.length})</span>
-              {nextSendAt && <span className="queue-countdown">próximo em {secondsToNext}s</span>}
-            </div>
-            {queue.some((i) => i.status === 'waiting') && (
-              <button type="button" className="btn-text" onClick={handleClearQueue} title="Cancelar envios pendentes">
-                <X size={12} style={{ display: 'inline', marginRight: 4 }} />
-                Cancelar fila
-              </button>
-            )}
-          </div>
-
-          <div className="history-list">
-            {queue.map((item) => (
-              <div key={item.id} className="history-item">
-                <div className="history-phone">
-                  {item.status === 'sending' ? <div className="spinner spinner-sm"></div> : <Clock size={14} color="#94a3b8" />}
-                  <span>{item.phone}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span className="history-time">
-                    {item.status === 'sending' ? 'Digitando e enviando...' : 'Aguardando'}
-                  </span>
-                  {item.status === 'waiting' && (
-                    <button
-                      type="button"
-                      className="btn-close"
-                      onClick={() => handleCancelQueueItem(item.id)}
-                      title="Remover da fila"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
+      {/* Área de trabalho */}
+      <main className="section">
+        <div className="container workspace">
+          <section className="card workspace-main" aria-label="Novo disparo">
+            {/* Campo 1: Telefone */}
+            <div className="form-group">
+              <div className="label-row">
+                <label className="form-label" htmlFor="phone-input">
+                  Telefone do lead
+                </label>
+                <span className="label-hint">Com DDD (ex: 11 99325-9396)</span>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
 
-      {/* Histórico Recente */}
-      {history.length > 0 && (
-        <section className="history-section">
-          <div className="history-header">
-            <div className="history-title">
-              <Clock size={14} />
-              <span>Últimos Envios</span>
+              <div className="phone-field">
+                <span className="phone-prefix">+55</span>
+                <input
+                  id="phone-input"
+                  ref={phoneInputRef}
+                  type="tel"
+                  inputMode="numeric"
+                  className="input phone-input"
+                  placeholder="(11) 99999-9999"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  onKeyDown={handleKeyDown}
+                  autoComplete="off"
+                  aria-invalid={status?.type === 'error' && status.text.includes('DDD') ? true : undefined}
+                />
+              </div>
             </div>
-            <button
-              type="button"
-              className="btn-text"
-              onClick={handleClearHistory}
-              title="Limpar histórico"
-            >
-              <Trash2 size={12} style={{ display: 'inline', marginRight: 4 }} />
-              Limpar
-            </button>
-          </div>
 
-          <div className="history-list">
-            {history.map((item) => (
-              <div key={item.id} className="history-item">
-                <div className="history-phone">
-                  <Phone size={14} color="#25d366" />
-                  <span>{item.phone}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span className="history-time">{item.timestamp}</span>
+            {/* Campo 2: Mensagem */}
+            <div className="form-group">
+              <div className="label-row">
+                <label className="form-label" htmlFor="message-input">
+                  Mensagem com variações
+                </label>
+                <div style={{ display: 'flex', gap: 16 }}>
                   <button
                     type="button"
-                    className="btn-resend"
-                    onClick={() => handleSend(item.phone)}
+                    className="link"
+                    onClick={() => setPreview(spin(message))}
+                    title="Gerar um exemplo de como o lead vai receber"
                   >
-                    Reenviar
+                    <Shuffle size={14} strokeWidth={2.5} />
+                    Ver variação
+                  </button>
+                  <button
+                    type="button"
+                    className="link"
+                    onClick={handleResetMessage}
+                    title="Restaurar mensagem padrão"
+                  >
+                    <RotateCcw size={14} strokeWidth={2.5} />
+                    Restaurar padrão
                   </button>
                 </div>
               </div>
-            ))}
+
+              <textarea
+                id="message-input"
+                className="textarea"
+                value={message}
+                onChange={handleMessageChange}
+                onKeyDown={handleTextAreaKeyDown}
+                placeholder="Digite aqui o texto que o lead receberá..."
+                aria-invalid={status?.type === 'error' && status.text.includes('mensagem para o lead') ? true : undefined}
+              />
+
+              <div className="textarea-actions">
+                <span>
+                  <code>{'{Olá|Oi}'}</code> varia o texto · <code>{'{saudacao}'}</code> vira Bom dia/Boa tarde/Boa noite
+                </span>
+                <span className="mono">Ctrl + Enter envia</span>
+              </div>
+
+              {preview !== null && (
+                <div className="preview-box">
+                  <div className="preview-header">
+                    <span className="eyebrow">Exemplo de variação</span>
+                    <button type="button" className="icon-btn" onClick={() => setPreview(null)} title="Fechar">
+                      <X size={14} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                  <p>{preview}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Feedback */}
+            {status && (
+              <div
+                className={`feedback ${status.type === 'success' ? 'feedback-success' : 'feedback-error'}`}
+                role={status.type === 'error' ? 'alert' : 'status'}
+              >
+                {status.type === 'success' ? (
+                  <CheckCircle2 size={18} strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 1 }} />
+                ) : (
+                  <AlertCircle size={18} strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 1 }} />
+                )}
+                <p>{status.text}</p>
+              </div>
+            )}
+
+            {/* Botão de disparo */}
+            <InteractiveHoverButton variant="ink" size="lg" onClick={() => handleSend()} disabled={!phone.trim()}>
+              {isQueueBusy ? 'Adicionar à fila' : 'Disparar mensagem'}
+              <span className="kbd">Enter ↵</span>
+            </InteractiveHoverButton>
+          </section>
+
+          <div className="workspace-side">
+            {/* Fila de Envio */}
+            <section className="list-section" aria-label="Fila de envio">
+              <div className="list-header">
+                <span className="eyebrow">
+                  <ListOrdered size={14} strokeWidth={2.5} />
+                  Fila ({queue.length})
+                </span>
+                {nextSendAt && <span className="countdown">próximo em {secondsToNext}s</span>}
+              </div>
+
+              {queue.length === 0 ? (
+                <p className="list-empty">Nenhum envio pendente.</p>
+              ) : (
+                queue.map((item) => (
+                  <div key={item.id} className="list-row">
+                    <div className="list-phone">
+                      {item.status === 'sending' ? <span className="spinner" aria-hidden="true" /> : <Clock size={14} strokeWidth={2.5} />}
+                      <span>{item.phone}</span>
+                    </div>
+                    <div className="list-meta">
+                      <span>{item.status === 'sending' ? 'digitando…' : 'aguardando'}</span>
+                      {item.status === 'waiting' && (
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={() => handleCancelQueueItem(item.id)}
+                          title="Remover da fila"
+                        >
+                          <X size={14} strokeWidth={2.5} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+              {queue.some((i) => i.status === 'waiting') && (
+                <button type="button" className="link" style={{ marginTop: 12, alignSelf: 'flex-start' }} onClick={handleClearQueue}>
+                  Cancelar fila
+                </button>
+              )}
+            </section>
+
+            {/* Histórico */}
+            <section className="list-section" aria-label="Últimos envios">
+              <div className="list-header">
+                <span className="eyebrow">
+                  <Clock size={14} strokeWidth={2.5} />
+                  Últimos envios
+                </span>
+                {history.length > 0 && (
+                  <button type="button" className="link" onClick={handleClearHistory} title="Limpar histórico">
+                    <Trash2 size={14} strokeWidth={2.5} />
+                    Limpar
+                  </button>
+                )}
+              </div>
+
+              {history.length === 0 ? (
+                <p className="list-empty">Os envios feitos aparecem aqui.</p>
+              ) : (
+                history.map((item) => (
+                  <div key={item.id} className="list-row">
+                    <div className="list-phone">
+                      <Phone size={14} strokeWidth={2.5} />
+                      <span>{item.phone}</span>
+                    </div>
+                    <div className="list-meta">
+                      <span>{item.timestamp}</span>
+                      <button type="button" className="row-action" onClick={() => handleSend(item.phone)}>
+                        Reenviar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
           </div>
-        </section>
-      )}
+        </div>
+      </main>
+
+      <footer className="site-footer">
+        <div className="container">
+          <span>malp tech · LeadZap</span>
+          <span>Envio via API · intervalo aleatório · spintax</span>
+        </div>
+      </footer>
 
       {/* Modal de Configuração da API */}
       {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
+          <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <div className="modal-header">
-              <h2 className="modal-title">
-                <Settings size={18} />
-                Conectar API do WhatsApp
+              <h2 id="modal-title" className="headline modal-title">
+                Conectar API
               </h2>
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => setIsModalOpen(false)}
-              >
-                <X size={18} />
+              <button type="button" className="icon-btn" onClick={() => setIsModalOpen(false)} title="Fechar">
+                <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
             <div className="modal-body">
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
-                Para enviar sem abrir o WhatsApp, conecte a sua API (Z-API, Evolution API ou Meta Cloud):
-              </p>
+              <p className="modal-intro">Conecte a sua API do WhatsApp para enviar em segundo plano.</p>
 
               {/* Seletor de Provedor */}
-              <div className="provider-selector">
-                <button
-                  type="button"
-                  className={`provider-btn ${apiConfig.provider === 'evolution' ? 'active' : ''}`}
-                  onClick={() => setApiConfig({ ...apiConfig, provider: 'evolution' })}
-                >
-                  Evolution API
-                </button>
-                <button
-                  type="button"
-                  className={`provider-btn ${apiConfig.provider === 'zapi' ? 'active' : ''}`}
-                  onClick={() => setApiConfig({ ...apiConfig, provider: 'zapi' })}
-                >
-                  Z-API
-                </button>
-                <button
-                  type="button"
-                  className={`provider-btn ${apiConfig.provider === 'meta' ? 'active' : ''}`}
-                  onClick={() => setApiConfig({ ...apiConfig, provider: 'meta' })}
-                >
-                  Meta Cloud
-                </button>
+              <div className="provider-selector" role="group" aria-label="Provedor">
+                {(
+                  [
+                    ['evolution', 'Evolution API'],
+                    ['zapi', 'Z-API'],
+                    ['meta', 'Meta Cloud'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`provider-btn ${apiConfig.provider === value ? 'active' : ''}`}
+                    aria-pressed={apiConfig.provider === value}
+                    onClick={() => setApiConfig({ ...apiConfig, provider: value })}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
 
               {/* Campos dinâmicos conforme provedor */}
               {apiConfig.provider === 'evolution' && (
                 <>
                   <div className="form-group">
-                    <label className="form-label">URL da Evolution API</label>
+                    <label className="form-label" htmlFor="cfg-url">URL da Evolution API</label>
                     <input
+                      id="cfg-url"
                       type="url"
-                      className="config-input"
+                      className="input"
                       placeholder="https://sua-evolution.com"
                       value={apiConfig.apiUrl}
                       onChange={(e) => setApiConfig({ ...apiConfig, apiUrl: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Nome da Instância</label>
+                    <label className="form-label" htmlFor="cfg-instance">Nome da instância</label>
                     <input
+                      id="cfg-instance"
                       type="text"
-                      className="config-input"
+                      className="input"
                       placeholder="minha-instancia"
                       value={apiConfig.instanceName || ''}
                       onChange={(e) => setApiConfig({ ...apiConfig, instanceName: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">API Key (Token de Acesso)</label>
+                    <label className="form-label" htmlFor="cfg-token">API Key (token da instância)</label>
                     <input
+                      id="cfg-token"
                       type="password"
-                      className="config-input"
-                      placeholder="Sua Global API Key"
+                      className="input"
+                      placeholder="Token da instância"
                       value={apiConfig.apiToken}
                       onChange={(e) => setApiConfig({ ...apiConfig, apiToken: e.target.value })}
                     />
@@ -693,20 +714,22 @@ export default function Home() {
               {apiConfig.provider === 'zapi' && (
                 <>
                   <div className="form-group">
-                    <label className="form-label">URL da Instância Z-API</label>
+                    <label className="form-label" htmlFor="cfg-url">URL da instância Z-API</label>
                     <input
+                      id="cfg-url"
                       type="url"
-                      className="config-input"
+                      className="input"
                       placeholder="https://api.z-api.io/instances/SUA_INSTANCIA/token/SEU_TOKEN"
                       value={apiConfig.apiUrl}
                       onChange={(e) => setApiConfig({ ...apiConfig, apiUrl: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Client Token (Segurança)</label>
+                    <label className="form-label" htmlFor="cfg-client">Client Token (segurança)</label>
                     <input
+                      id="cfg-client"
                       type="password"
-                      className="config-input"
+                      className="input"
                       placeholder="Seu Client Token"
                       value={apiConfig.clientToken || ''}
                       onChange={(e) => setApiConfig({ ...apiConfig, clientToken: e.target.value })}
@@ -718,20 +741,22 @@ export default function Home() {
               {apiConfig.provider === 'meta' && (
                 <>
                   <div className="form-group">
-                    <label className="form-label">URL do Graph Meta</label>
+                    <label className="form-label" htmlFor="cfg-url">URL do Graph Meta</label>
                     <input
+                      id="cfg-url"
                       type="url"
-                      className="config-input"
+                      className="input"
                       placeholder="https://graph.facebook.com/v21.0/PHONE_NUMBER_ID/messages"
                       value={apiConfig.apiUrl}
                       onChange={(e) => setApiConfig({ ...apiConfig, apiUrl: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Bearer Token de Acesso</label>
+                    <label className="form-label" htmlFor="cfg-token">Bearer Token de acesso</label>
                     <input
+                      id="cfg-token"
                       type="password"
-                      className="config-input"
+                      className="input"
                       placeholder="EAAB..."
                       value={apiConfig.apiToken}
                       onChange={(e) => setApiConfig({ ...apiConfig, apiToken: e.target.value })}
@@ -742,18 +767,18 @@ export default function Home() {
 
               {/* Proteção anti-bloqueio */}
               <div className="antiban-section">
-                <h3 className="antiban-title">
-                  <ShieldCheck size={16} />
+                <span className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <ShieldCheck size={14} strokeWidth={2.5} />
                   Proteção anti-bloqueio
-                </h3>
+                </span>
 
                 <div className="form-group">
-                  <label className="form-label">Intervalo aleatório entre envios (segundos)</label>
+                  <span className="form-label">Intervalo aleatório entre envios (segundos)</span>
                   <div className="grid-2">
                     <input
                       type="number"
                       min={0}
-                      className="config-input"
+                      className="input"
                       aria-label="Intervalo mínimo"
                       value={antiBan.minInterval}
                       onChange={(e) => updateAntiBan('minInterval', e.target.value)}
@@ -761,7 +786,7 @@ export default function Home() {
                     <input
                       type="number"
                       min={0}
-                      className="config-input"
+                      className="input"
                       aria-label="Intervalo máximo"
                       value={antiBan.maxInterval}
                       onChange={(e) => updateAntiBan('maxInterval', e.target.value)}
@@ -770,13 +795,13 @@ export default function Home() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Tempo &quot;digitando...&quot; antes de enviar (segundos)</label>
+                  <span className="form-label">Tempo &quot;digitando…&quot; antes de enviar (segundos)</span>
                   <div className="grid-2">
                     <input
                       type="number"
                       min={0}
                       max={15}
-                      className="config-input"
+                      className="input"
                       aria-label="Digitação mínima"
                       value={antiBan.minTyping}
                       onChange={(e) => updateAntiBan('minTyping', e.target.value)}
@@ -785,42 +810,28 @@ export default function Home() {
                       type="number"
                       min={0}
                       max={15}
-                      className="config-input"
+                      className="input"
                       aria-label="Digitação máxima"
                       value={antiBan.maxTyping}
                       onChange={(e) => updateAntiBan('maxTyping', e.target.value)}
                     />
                   </div>
-                  <span className="label-hint">A simulação de digitação funciona com a Evolution API.</span>
+                  <p className="field-note">A simulação de digitação funciona com a Evolution API.</p>
                 </div>
               </div>
             </div>
 
             <div className="modal-footer">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setIsModalOpen(false)}
-              >
+              <InteractiveHoverButton variant="outline" size="md" onClick={() => setIsModalOpen(false)}>
                 Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={handleSaveConfig}
-              >
-                Salvar Configurações
-              </button>
+              </InteractiveHoverButton>
+              <InteractiveHoverButton variant="ink" size="md" onClick={handleSaveConfig}>
+                Salvar
+              </InteractiveHoverButton>
             </div>
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="footer-info">
-        <p>Configurado para envio silencioso • Seu número: <span>(11) 99325-9396</span></p>
-        <p>Pronto para deploy na Vercel • Envio 100% headless via API</p>
-      </footer>
-    </main>
+    </>
   );
 }
