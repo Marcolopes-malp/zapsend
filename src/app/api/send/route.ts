@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-// A simulação de digitação segura a requisição por alguns segundos
-export const maxDuration = 30;
+// A simulação de digitação segura a requisição pelo tempo configurado
+export const maxDuration = 120;
 
-const MAX_TYPING_DELAY_MS = 15000;
+const MAX_TYPING_DELAY_MS = 120000;
 
 interface SendPayload {
   phone: string;
   message: string;
   typingDelayMs?: number;
   config?: {
-    provider?: 'evolution' | 'zapi' | 'meta' | 'custom';
+    provider?: "evolution" | "zapi" | "meta" | "custom";
     apiUrl?: string;
     apiToken?: string;
     instanceName?: string;
@@ -21,10 +21,10 @@ interface SendPayload {
 export async function GET() {
   const hasEnvConfig = Boolean(process.env.WHATSAPP_API_URL);
   return NextResponse.json({
-    status: 'ok',
+    status: "ok",
     configured: hasEnvConfig,
-    provider: process.env.WHATSAPP_PROVIDER || 'not_configured',
-    senderPhone: '11993259396',
+    provider: process.env.WHATSAPP_PROVIDER || "not_configured",
+    senderPhone: "11993259396",
   });
 }
 
@@ -32,49 +32,60 @@ export async function POST(request: Request) {
   try {
     const body: SendPayload = await request.json();
     const { phone, message, config } = body;
-    const typingDelayMs = Math.min(Math.max(Math.round(Number(body.typingDelayMs) || 0), 0), MAX_TYPING_DELAY_MS);
+    const typingDelayMs = Math.min(
+      Math.max(Math.round(Number(body.typingDelayMs) || 0), 0),
+      MAX_TYPING_DELAY_MS,
+    );
 
     if (!phone || !message) {
       return NextResponse.json(
-        { success: false, error: 'Número de telefone e mensagem são obrigatórios.' },
-        { status: 400 }
+        {
+          success: false,
+          error: "Número de telefone e mensagem são obrigatórios.",
+        },
+        { status: 400 },
       );
     }
 
     // Sanitiza o número para formato internacional (ex: 5511993259396)
-    const cleanDigits = phone.replace(/\D/g, '');
-    const fullPhone = cleanDigits.startsWith('55') ? cleanDigits : `55${cleanDigits}`;
+    const cleanDigits = phone.replace(/\D/g, "");
+    const fullPhone = cleanDigits.startsWith("55")
+      ? cleanDigits
+      : `55${cleanDigits}`;
 
     // Configurações: Prioriza parâmetros passados pela UI, senão pega do .env
-    const provider = config?.provider || process.env.WHATSAPP_PROVIDER || 'evolution';
+    const provider =
+      config?.provider || process.env.WHATSAPP_PROVIDER || "evolution";
     const apiUrl = config?.apiUrl || process.env.WHATSAPP_API_URL;
     const apiToken = config?.apiToken || process.env.WHATSAPP_API_TOKEN;
     const instanceName = config?.instanceName || process.env.WHATSAPP_INSTANCE;
-    const clientToken = config?.clientToken || process.env.WHATSAPP_CLIENT_TOKEN;
+    const clientToken =
+      config?.clientToken || process.env.WHATSAPP_CLIENT_TOKEN;
 
     if (!apiUrl) {
       return NextResponse.json(
         {
           success: false,
           needsConfig: true,
-          error: 'Nenhuma API do WhatsApp conectada ainda. Configure a URL e Token da sua API (Z-API, Evolution ou Meta) para disparo 100% automático em segundo plano.',
+          error:
+            "Nenhuma API do WhatsApp conectada ainda. Configure a URL e Token da sua API (Z-API, Evolution ou Meta) para disparo 100% automático em segundo plano.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     let endpoint = apiUrl.trim();
     let headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
     let requestBody: any = {};
 
     // 1. Provedor: Evolution API
-    if (provider === 'evolution') {
-      if (instanceName && !endpoint.includes('/message/sendText')) {
-        endpoint = `${endpoint.replace(/\/$/, '')}/message/sendText/${instanceName}`;
+    if (provider === "evolution") {
+      if (instanceName && !endpoint.includes("/message/sendText")) {
+        endpoint = `${endpoint.replace(/\/$/, "")}/message/sendText/${instanceName}`;
       }
-      headers['apikey'] = apiToken || '';
+      headers["apikey"] = apiToken || "";
       requestBody = {
         number: fullPhone,
         text: message,
@@ -83,32 +94,32 @@ export async function POST(request: Request) {
       };
     }
     // 2. Provedor: Z-API
-    else if (provider === 'zapi') {
-      if (!endpoint.includes('/send-text')) {
-        endpoint = `${endpoint.replace(/\/$/, '')}/send-text`;
+    else if (provider === "zapi") {
+      if (!endpoint.includes("/send-text")) {
+        endpoint = `${endpoint.replace(/\/$/, "")}/send-text`;
       }
-      if (clientToken) headers['Client-Token'] = clientToken;
-      headers['Authorization'] = `Bearer ${apiToken}`;
+      if (clientToken) headers["Client-Token"] = clientToken;
+      headers["Authorization"] = `Bearer ${apiToken}`;
       requestBody = {
         phone: fullPhone,
         message: message,
       };
     }
     // 3. Provedor: Meta Cloud API (Oficial)
-    else if (provider === 'meta') {
-      headers['Authorization'] = `Bearer ${apiToken}`;
+    else if (provider === "meta") {
+      headers["Authorization"] = `Bearer ${apiToken}`;
       requestBody = {
-        messaging_product: 'whatsapp',
+        messaging_product: "whatsapp",
         to: fullPhone,
-        type: 'text',
+        type: "text",
         text: { body: message },
       };
     }
     // 4. Provedor: Custom / Genérico
     else {
       if (apiToken) {
-        headers['Authorization'] = `Bearer ${apiToken}`;
-        headers['apikey'] = apiToken;
+        headers["Authorization"] = `Bearer ${apiToken}`;
+        headers["apikey"] = apiToken;
       }
       requestBody = {
         number: fullPhone,
@@ -120,7 +131,7 @@ export async function POST(request: Request) {
 
     // Realiza a chamada HTTP direta para a API do WhatsApp
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify(requestBody),
     });
@@ -134,7 +145,7 @@ export async function POST(request: Request) {
           error: `Erro retornado pela API do WhatsApp (${response.status}): ${JSON.stringify(responseData)}`,
           details: responseData,
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -145,13 +156,13 @@ export async function POST(request: Request) {
       data: responseData,
     });
   } catch (error: any) {
-    console.error('Erro na rota /api/send:', error);
+    console.error("Erro na rota /api/send:", error);
     return NextResponse.json(
       {
         success: false,
         error: `Falha na conexão com a API do WhatsApp: ${error.message}`,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
