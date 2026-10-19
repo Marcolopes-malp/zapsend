@@ -8,10 +8,11 @@
     "start": "next start -p 3001"
   },
   "dependencies": {
+    "googleapis": "^178.0.0",
+    "lucide-react": "^1.47.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "lucide-react": "^1.47.0"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
